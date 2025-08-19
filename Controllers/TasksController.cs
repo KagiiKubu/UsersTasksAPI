@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using UsersTasksAPI.Models;
+using Microsoft.EntityFrameworkCore;
+using UserTask = UsersTasksAPI.Models.Task;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -14,45 +16,56 @@ namespace UsersTasksAPI.Controllers
 
     public class TasksController : ControllerBase{
 
-        //Temp list to store Tasks (simulates DB)
-        private static List <Models.Task> tasksList = new List<Models.Task>();
+        //inject DataContext into controller so it can interact with DB
+        private readonly DataContext _context;
 
-        // GET: apli/Tasks (returns all Tasks in list)
-        [HttpGet]
-        public ActionResult<List<Models.Task>> GetAllTasks(){
-            return tasksList;
+        public TasksController(DataContext context){
+            _context = context;
         }
 
-        // GET: apli/Tasks/{Title} (returns single Task by their Title)
-        [HttpGet("{title}")]
-        public ActionResult<Models.Task> GetTaskByTitle(string title){
 
-            //look for Task in the list using its title
-            var task = tasksList.FirstOrDefault(u => u.Title == title);
+        // GET: api/Tasks (returns all Tasks in DB)
+        [HttpGet]
+        public async Task<ActionResult<List<UserTask>>> GetAllTasks(){
+
+            // Use EF Core to get all tasks from the Users table
+            var tasks = await _context.Tasks.ToListAsync();
+            return Ok(tasks);
+        }
+
+        // GET: api/Tasks/{Title} (returns single Task by their Title)
+        [HttpGet("{title}")]
+        public async Task<ActionResult<UserTask>> GetTaskByTitle(string title){
+
+            // Use EF Core to find task by title in DB
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Title == title);
 
             if (task == null)
                 return NotFound();
 
-            return task;
+            return Ok(task);
         }
 
         //POST: api/Tasks (Add new Task)
         [HttpPost]
-        public ActionResult<List<Models.Task>> AddNewTask(Models.Task newTask){
+        public async Task<ActionResult<UserTask>> AddNewTask(UserTask newTask){
 
-            //Add new Task to list
-            tasksList.Add(newTask);
+            //Add new Task to DB
+            await _context.Tasks.AddAsync(newTask);
+
+            // Save changes to DB
+            await _context.SaveChangesAsync();
 
             // Return 201 Created, with a link to get the newly created Task
             return CreatedAtAction(nameof(GetTaskByTitle), new { id = newTask.Title }, newTask);
         }
 
-        // PUT: apli/Tasks/{title} (update existing Task by Title)
+        // PUT: api/Tasks/{title} (update existing Task by Title)
         [HttpPut("{title}")]
-        public ActionResult<List<Models.Task>> UpdateTaskById(string title, Models.Task updatedTask){
+        public async Task<ActionResult<UserTask>> UpdateTaskById(string title, UserTask updatedTask){
             
-            //look for Task in the list using ID
-            var task = tasksList.FirstOrDefault(u => u.Title == title);
+            // Use EF Core to find task by title in DB
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Title == title);
 
             if (task == null)
                 return NotFound();
@@ -62,96 +75,115 @@ namespace UsersTasksAPI.Controllers
             task.Assignee = updatedTask.Assignee;
             task.DueDate = updatedTask.DueDate;
 
+            // Save changes to DB
+            await _context.SaveChangesAsync();
+
             return NoContent(); //returns 204 meaning success
         }
 
-         // DELETE: apli/Tasks/{title} (remove existing Task by Title)
+         // DELETE: api/Tasks/{title} (remove existing Task by Title)
         [HttpDelete("{title}")]
-        public ActionResult<List<Models.Task>> RemoveTaskByTitle(string title){
+        public async Task<ActionResult<UserTask>> RemoveTaskByTitle(string title){
             
-            //look for Task in the list using ID
-            var task = tasksList.FirstOrDefault(u => u.Title == title);
+            // Use EF Core to find task by title in DB
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Title == title);
 
             if (task == null)
                 return NotFound();
 
-            tasksList.Remove(task);
+            //Add new Task to DB
+            _context.Tasks.Remove(task);
+
+            // Save changes to DB
+            await _context.SaveChangesAsync();
 
             return NoContent(); //returns 204 meaning success
         }
 
-                // GET: apli/Tasks/{expired} (returns all expired tasks)
+        // GET: api/Tasks/{expired} (returns all expired tasks)
         [HttpGet("expired")]
-        public ActionResult<List<Models.Task>> GetExpiredTasks(){
+        public async Task<ActionResult<List<UserTask>>> GetExpiredTasks(){
 
             //create new list for expired tasks
-            var expiredTasksList = new List<Models.Task>();
+            var expiredTasksList = new List<UserTask>();
+
+            // Use EF Core to get all tasks from the Users table
+            var allTasks = await _context.Tasks.ToListAsync();
 
             //loop though task list to find expired tasks
-            foreach (var task in tasksList){
+            foreach (var task in allTasks){
 
                 if (task.DueDate < DateOnly.FromDateTime(DateTime.Now))
                     expiredTasksList.Add(task);
 
             }
 
-            return expiredTasksList;
+            return Ok(expiredTasksList);
         }
 
 
-                // GET: apli/Tasks/{active} (returns all active tasks)
+        // GET: api/Tasks/{active} (returns all active tasks)
         [HttpGet("active")]
-        public ActionResult<List<Models.Task>> GetActiveTasks(){
+        public async Task<ActionResult<List<UserTask>>> GetActiveTasks(){
 
             //create new list for active tasks
-            var activeTasksList = new List<Models.Task>();
+            var activeTasksList = new List<UserTask>();
+
+            // Use EF Core to get all tasks from the Users table
+            var allTasks = await _context.Tasks.ToListAsync();
 
             //loop though task list to find active tasks
-            foreach (var task in tasksList){
+            foreach (var task in allTasks){
 
                 if (task.DueDate >= DateOnly.FromDateTime(DateTime.Now))
                     activeTasksList.Add(task);
 
             }
 
-            return activeTasksList;
+            return Ok(activeTasksList);
         }
 
-        // GET: apli/Tasks/{givenDate} (returns all tasks by given date)
+        // GET: api/Tasks/{givenDate} (returns all tasks by given date)
         [HttpGet("date/{givenDate}")]
-        public ActionResult<List<Models.Task>> GetTasksByDate(DateOnly givenDate){
+        public async Task<ActionResult<List<UserTask>>> GetTasksByDate(DateOnly givenDate){
 
             //create new list for given date tasks
-            var tasksByDateList = new List<Models.Task>();
+            var tasksByDateList = new List<UserTask>();
+
+            // Use EF Core to get all tasks from the Users table
+            var allTasks = await _context.Tasks.ToListAsync();
 
             //loop though task list to find given date tasks
-            foreach (var task in tasksList){
+            foreach (var task in allTasks){
 
                 if (task.DueDate == givenDate)
                     tasksByDateList.Add(task);
 
             }
 
-            return tasksByDateList;
+            return Ok(tasksByDateList);
         }
 
         
-        // GET: apli/Tasks/{assignee} (returns all tasks by assignee)
+        // GET: api/Tasks/{assignee} (returns all tasks by assignee)
         [HttpGet("user/{assigneeId}")]
-        public ActionResult<List<Models.Task>> GetTasksByAssignee(int assigneeId){
+        public async Task<ActionResult<List<UserTask>>> GetTasksByAssignee(int assigneeId){
 
             //create new list for given assignee's tasks
-            var tasksByAssignee = new List<Models.Task>();
+            var tasksByAssignee = new List<UserTask>();
+
+            // Use EF Core to get all tasks from the Users table
+            var allTasks = await _context.Tasks.ToListAsync();
 
             //loop though task list to find given assignee's tasks
-            foreach (var task in tasksList){
+            foreach (var task in allTasks){
 
                 if (task.Assignee == assigneeId)
                     tasksByAssignee.Add(task);
 
             }
 
-            return tasksByAssignee;
+            return Ok(tasksByAssignee);
         }
 
 
