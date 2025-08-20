@@ -17,12 +17,14 @@ namespace UsersTasksAPI.Controllers
 
     public class TasksController : ControllerBase{
 
-        //inject DataContext into controller so it can interact with DB
-        private readonly DataContext _context;
+        //inject ITaskRepository into controller so it can access DB via repository pattern
+        private readonly ITaskRepository _taskRepository;
 
-        public TasksController(DataContext context){
-            _context = context;
+        public TasksController(ITaskRepository taskRepository){
+
+            _taskRepository = taskRepository;
         }
+
 
 
         // GET: api/Tasks (returns all Tasks in DB)
@@ -30,7 +32,7 @@ namespace UsersTasksAPI.Controllers
         public async Task<ActionResult<List<UserTask>>> GetAllTasks(){
 
             // Use EF Core to get all tasks from the Users table
-            var tasks = await _context.Tasks.ToListAsync();
+            var tasks = await _taskRepository.GetAllTasks();
             return Ok(tasks);
         }
 
@@ -39,7 +41,7 @@ namespace UsersTasksAPI.Controllers
         public async Task<ActionResult<UserTask>> GetTaskByTitle(string title){
 
             // Use EF Core to find task by title in DB
-            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Title == title);
+            var task = await _taskRepository.GetTaskByTitle(title);
 
             if (task == null)
                 return NotFound();
@@ -52,51 +54,36 @@ namespace UsersTasksAPI.Controllers
         public async Task<ActionResult<UserTask>> AddNewTask(UserTask newTask){
 
             //Add new Task to DB
-            await _context.Tasks.AddAsync(newTask);
+            var success = await _taskRepository.AddNewTask(newTask);
 
-            // Save changes to DB
-            await _context.SaveChangesAsync();
+            if (!success)
+                return BadRequest("Could not add the task.");
 
-            // Return 201 Created, with a link to get the newly created Task
             return CreatedAtAction(nameof(GetTaskByTitle), new { title = newTask.Title }, newTask);
         }
 
         // PUT: api/Tasks/{title} (update existing Task by Title)
         [HttpPut("{title}")]
-        public async Task<IActionResult> UpdateTaskByTitle(string title, UserTask updatedTask){
+        public async Task<IActionResult> UpdateTask(string title, UserTask updatedTask){
             
             // Use EF Core to find task by title in DB
-            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Title == title);
+            var success = await _taskRepository.UpdateTask(title, updatedTask);
 
-            if (task == null)
+            if (!success)
                 return NotFound();
-
-            task.Title = updatedTask.Title;
-            task.Description = updatedTask.Description;
-            task.Assignee = updatedTask.Assignee;
-            task.DueDate = updatedTask.DueDate;
-
-            // Save changes to DB
-            await _context.SaveChangesAsync();
 
             return NoContent(); //returns 204 meaning success
         }
 
          // DELETE: api/Tasks/{title} (remove existing Task by Title)
         [HttpDelete("{title}")]
-        public async Task<IActionResult> RemoveTaskByTitle(string title){
+        public async Task<IActionResult> DeleteTaskByTitle(string title){
             
             // Use EF Core to find task by title in DB
-            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Title == title);
+            var success = await _taskRepository.DeleteTaskByTitle(title);
 
-            if (task == null)
+            if (!success)
                 return NotFound();
-
-            //Add new Task to DB
-            _context.Tasks.Remove(task);
-
-            // Save changes to DB
-            await _context.SaveChangesAsync();
 
             return NoContent(); //returns 204 meaning success
         }
@@ -105,21 +92,10 @@ namespace UsersTasksAPI.Controllers
         [HttpGet("expired")]
         public async Task<ActionResult<List<UserTask>>> GetExpiredTasks(){
 
-            //create new list for expired tasks
-            var expiredTasksList = new List<UserTask>();
-
             // Use EF Core to get all tasks from the Users table
-            var allTasks = await _context.Tasks.ToListAsync();
+            var expiredTasks = await _taskRepository.GetExpiredTasks();
 
-            //loop though task list to find expired tasks
-            foreach (var task in allTasks){
-
-                if (task.DueDate < DateOnly.FromDateTime(DateTime.Now))
-                    expiredTasksList.Add(task);
-
-            }
-
-            return Ok(expiredTasksList);
+            return Ok(expiredTasks);
         }
 
 
@@ -127,42 +103,18 @@ namespace UsersTasksAPI.Controllers
         [HttpGet("active")]
         public async Task<ActionResult<List<UserTask>>> GetActiveTasks(){
 
-            //create new list for active tasks
-            var activeTasksList = new List<UserTask>();
+            var activeTasks = await _taskRepository.GetActiveTasks();
 
-            // Use EF Core to get all tasks from the Users table
-            var allTasks = await _context.Tasks.ToListAsync();
-
-            //loop though task list to find active tasks
-            foreach (var task in allTasks){
-
-                if (task.DueDate >= DateOnly.FromDateTime(DateTime.Now))
-                    activeTasksList.Add(task);
-
-            }
-
-            return Ok(activeTasksList);
+            return Ok(activeTasks);
         }
 
         // GET: api/Tasks/{givenDate} (returns all tasks by given date)
         [HttpGet("date/{givenDate}")]
         public async Task<ActionResult<List<UserTask>>> GetTasksByDate(DateOnly givenDate){
 
-            //create new list for given date tasks
-            var tasksByDateList = new List<UserTask>();
+            var tasksByDate = await _taskRepository.GetTasksByDate(givenDate);
 
-            // Use EF Core to get all tasks from the Users table
-            var allTasks = await _context.Tasks.ToListAsync();
-
-            //loop though task list to find given date tasks
-            foreach (var task in allTasks){
-
-                if (task.DueDate == givenDate)
-                    tasksByDateList.Add(task);
-
-            }
-
-            return Ok(tasksByDateList);
+            return Ok(tasksByDate);
         }
 
         
@@ -170,19 +122,7 @@ namespace UsersTasksAPI.Controllers
         [HttpGet("user/{assigneeId}")]
         public async Task<ActionResult<List<UserTask>>> GetTasksByAssignee(int assigneeId){
 
-            //create new list for given assignee's tasks
-            var tasksByAssignee = new List<UserTask>();
-
-            // Use EF Core to get all tasks from the Users table
-            var allTasks = await _context.Tasks.ToListAsync();
-
-            //loop though task list to find given assignee's tasks
-            foreach (var task in allTasks){
-
-                if (task.Assignee == assigneeId)
-                    tasksByAssignee.Add(task);
-
-            }
+            var tasksByAssignee = await _taskRepository.GetTasksByAssignee(assigneeId);
 
             return Ok(tasksByAssignee);
         }
