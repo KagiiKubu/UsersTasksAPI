@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using UsersTasksAPI.Models;
 using System.Collections.Generic;
-using System.Linq;
-using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
+using UsersTasksAPI.Repositories;
 
 namespace UsersTasksAPI.Controllers
 {
@@ -15,11 +14,12 @@ namespace UsersTasksAPI.Controllers
 
     public class UsersController : ControllerBase{
 
-        //inject DataContext into controller so it can interact with DB
-        private readonly DataContext _context;
+        //inject IUserRepository into controller so it can access DB via repository pattern
+        private readonly IUserRepository _userRepository;
 
-        public UsersController(DataContext context){
-            _context = context;
+        public UsersController(IUserRepository userRepository){
+
+            _userRepository = userRepository;
         }
 
 
@@ -28,7 +28,7 @@ namespace UsersTasksAPI.Controllers
         public async Task<ActionResult<List<User>>> GetAllUsers(){
 
             // Use EF Core to get all users from the Users table
-            var users = await _context.Users.ToListAsync();
+            var users = await _userRepository.GetAllUsers();
             return Ok(users);
         }
 
@@ -37,7 +37,7 @@ namespace UsersTasksAPI.Controllers
         public async Task<ActionResult<User>> GetUserById(int id){
 
             // Use EF Core to find user by ID in DB
-            var user = await _context.Users.FindAsync(id);
+            var user = await _userRepository.GetUserById(id);
 
             if (user == null)
                 return NotFound();
@@ -50,12 +50,11 @@ namespace UsersTasksAPI.Controllers
         public async Task<ActionResult<User>> AddNewUser(User newUser){
 
             // Add new user to DB
-            await _context.Users.AddAsync(newUser);
+            var success = await _userRepository.AddNewUser(newUser);
 
-            // save changes to DB
-            await _context.SaveChangesAsync();
+            if (!success)
+                return BadRequest("Could not add the user.");
 
-            // Return 201 Created, with a link to get the newly created user
             return CreatedAtAction(nameof(GetUserById), new { id = newUser.UserID }, newUser);
         }
 
@@ -63,36 +62,23 @@ namespace UsersTasksAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUserById(int id, User updatedUser){
             
-            var user = await _context.Users.FindAsync(id);
+            updatedUser.UserID = id;
+            var success = await _userRepository.UpdateUser(updatedUser);
 
-            if (user == null)
+            if (!success)
                 return NotFound();
-
-            user.Username = updatedUser.Username;
-            user.EmailAddress = updatedUser.EmailAddress;
-            user.Password = updatedUser.Password;
-
-            // save changes to DB
-            await _context.SaveChangesAsync();
 
             return NoContent(); //returns 204 meaning success
         }
 
          // DELETE: api/users/{Id} (remove existing user by Id)
         [HttpDelete("{id}")]
-        public async Task<IActionResult> RemoveUserById(int id){
+        public async Task<IActionResult> DeleteUserById(int id){
             
-            //look for user in the DB using ID
-            var user = await _context.Users.FindAsync(id);
+            var success = await _userRepository.DeleteUserById(id);
 
-            if (user == null)
+            if (!success)
                 return NotFound();
-
-            // Remove new user to DB
-            _context.Users.Remove(user);
-
-            // save changes to DB
-            await _context.SaveChangesAsync();
 
             return NoContent(); //returns 204 meaning success
         }
