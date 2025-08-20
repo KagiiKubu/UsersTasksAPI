@@ -28,7 +28,9 @@ namespace UsersTasksAPI.Controllers
 
 
 
-        // GET: api/Tasks (returns all Tasks in DB)
+        /// <summary>
+        /// Returns all tasks.
+        /// </summary>
         [HttpGet]
         public async Task<ActionResult<List<UserTask>>> GetAllTasks(){
 
@@ -37,7 +39,9 @@ namespace UsersTasksAPI.Controllers
             return Ok(tasks);
         }
 
-        // GET: api/Tasks/{Title} (returns single Task by their Title)
+        /// <summary>
+        /// Returns tasks by title.
+        /// </summary>
         [HttpGet("{title}")]
         public async Task<ActionResult<UserTask>> GetTaskByTitle(string title){
 
@@ -50,7 +54,9 @@ namespace UsersTasksAPI.Controllers
             return Ok(task);
         }
 
-        //POST: api/Tasks (Add new Task)
+        /// <summary>
+        /// Adds new task.
+        /// </summary>
         [HttpPost]
         public async Task<ActionResult<UserTask>> AddNewTask(UserTask newTask){
 
@@ -63,7 +69,9 @@ namespace UsersTasksAPI.Controllers
             return CreatedAtAction(nameof(GetTaskByTitle), new { title = newTask.Title }, newTask);
         }
 
-        // PUT: api/Tasks/{id} (update existing Task by id)
+        /// <summary>
+        /// Updates existing task.
+        /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTask(int id, UserTask updatedTask){
             
@@ -76,7 +84,9 @@ namespace UsersTasksAPI.Controllers
             return NoContent(); //returns 204 meaning success
         }
 
-         // DELETE: api/Tasks/{title} (remove existing Task by Title)
+         /// <summary>
+        /// Deletes task
+        /// </summary>
         [HttpDelete("{title}")]
         public async Task<IActionResult> DeleteTaskByTitle(string title){
             
@@ -89,7 +99,9 @@ namespace UsersTasksAPI.Controllers
             return NoContent(); //returns 204 meaning success
         }
 
-        // GET: api/Tasks/{expired} (returns all expired tasks)
+        /// <summary>
+        /// Returns all expired tasks.
+        /// </summary>
         [HttpGet("expired")]
         public async Task<ActionResult<List<UserTask>>> GetExpiredTasks(){
 
@@ -100,7 +112,9 @@ namespace UsersTasksAPI.Controllers
         }
 
 
-        // GET: api/Tasks/{active} (returns all active tasks)
+        /// <summary>
+        /// Returns all active tasks
+        /// </summary>
         [HttpGet("active")]
         public async Task<ActionResult<List<UserTask>>> GetActiveTasks(){
 
@@ -109,7 +123,9 @@ namespace UsersTasksAPI.Controllers
             return Ok(activeTasks);
         }
 
-        // GET: api/Tasks/{givenDate} (returns all tasks by given date)
+        /// <summary>
+        /// Returns tasks by given date
+        /// </summary>
         [HttpGet("date/{givenDate}")]
         public async Task<ActionResult<List<UserTask>>> GetTasksByDate(DateOnly givenDate){
 
@@ -119,7 +135,9 @@ namespace UsersTasksAPI.Controllers
         }
 
         
-        // GET: api/Tasks/{assignee} (returns all tasks by assignee)
+        /// <summary>
+        /// Returns tasks by given assignee
+        /// </summary>
         [HttpGet("{assigneeId}")]
         public async Task<IEnumerable<UserTask>> GetTasksByAssignee(int assigneeId){
 
