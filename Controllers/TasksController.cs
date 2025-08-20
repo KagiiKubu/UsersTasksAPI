@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using UsersTasksAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using UserTask = UsersTasksAPI.Models.Task;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -57,12 +58,12 @@ namespace UsersTasksAPI.Controllers
             await _context.SaveChangesAsync();
 
             // Return 201 Created, with a link to get the newly created Task
-            return CreatedAtAction(nameof(GetTaskByTitle), new { id = newTask.Title }, newTask);
+            return CreatedAtAction(nameof(GetTaskByTitle), new { title = newTask.Title }, newTask);
         }
 
         // PUT: api/Tasks/{title} (update existing Task by Title)
         [HttpPut("{title}")]
-        public async Task<ActionResult<UserTask>> UpdateTaskById(string title, UserTask updatedTask){
+        public async Task<IActionResult> UpdateTaskByTitle(string title, UserTask updatedTask){
             
             // Use EF Core to find task by title in DB
             var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Title == title);
@@ -83,7 +84,7 @@ namespace UsersTasksAPI.Controllers
 
          // DELETE: api/Tasks/{title} (remove existing Task by Title)
         [HttpDelete("{title}")]
-        public async Task<ActionResult<UserTask>> RemoveTaskByTitle(string title){
+        public async Task<IActionResult> RemoveTaskByTitle(string title){
             
             // Use EF Core to find task by title in DB
             var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Title == title);

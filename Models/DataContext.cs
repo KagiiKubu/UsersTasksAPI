@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using UsersTasksAPI.Models;
 using UserTask = UsersTasksAPI.Models.Task;
 
 

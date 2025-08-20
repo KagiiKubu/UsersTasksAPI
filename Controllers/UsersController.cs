@@ -3,6 +3,7 @@ using UsersTasksAPI.Models;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace UsersTasksAPI.Controllers
 {
@@ -60,7 +61,7 @@ namespace UsersTasksAPI.Controllers
 
         // PUT: api/users/{Id} (update existing user by Id)
         [HttpPut("{id}")]
-        public async Task<ActionResult<User>> UpdateUserById(int id, User updatedUser){
+        public async Task<IActionResult> UpdateUserById(int id, User updatedUser){
             
             var user = await _context.Users.FindAsync(id);
 
@@ -79,7 +80,7 @@ namespace UsersTasksAPI.Controllers
 
          // DELETE: api/users/{Id} (remove existing user by Id)
         [HttpDelete("{id}")]
-        public async Task<ActionResult<User>> RemoveUserById(int id){
+        public async Task<IActionResult> RemoveUserById(int id){
             
             //look for user in the DB using ID
             var user = await _context.Users.FindAsync(id);
