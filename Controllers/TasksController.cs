@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 using UsersTasksAPI.Models;
 using Microsoft.EntityFrameworkCore;
-using UserTask = UsersTasksAPI.Models.Task;
-using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using UsersTasksAPI.Repositories;
+
 
 namespace UsersTasksAPI.Controllers
 {
@@ -62,12 +63,12 @@ namespace UsersTasksAPI.Controllers
             return CreatedAtAction(nameof(GetTaskByTitle), new { title = newTask.Title }, newTask);
         }
 
-        // PUT: api/Tasks/{title} (update existing Task by Title)
-        [HttpPut("{title}")]
-        public async Task<IActionResult> UpdateTask(string title, UserTask updatedTask){
+        // PUT: api/Tasks/{id} (update existing Task by id)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateTask(int id, UserTask updatedTask){
             
             // Use EF Core to find task by title in DB
-            var success = await _taskRepository.UpdateTask(title, updatedTask);
+            var success = await _taskRepository.UpdateTask(id, updatedTask);
 
             if (!success)
                 return NotFound();
@@ -119,12 +120,10 @@ namespace UsersTasksAPI.Controllers
 
         
         // GET: api/Tasks/{assignee} (returns all tasks by assignee)
-        [HttpGet("user/{assigneeId}")]
-        public async Task<ActionResult<List<UserTask>>> GetTasksByAssignee(int assigneeId){
+        [HttpGet("{assigneeId}")]
+        public async Task<IEnumerable<UserTask>> GetTasksByAssignee(int assigneeId){
 
-            var tasksByAssignee = await _taskRepository.GetTasksByAssignee(assigneeId);
-
-            return Ok(tasksByAssignee);
+            return await _taskRepository.GetTasksByAssignee(assigneeId);
         }
 
 

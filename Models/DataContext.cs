@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using UsersTasksAPI.Models;
-using UserTask = UsersTasksAPI.Models.Task;
 
 
 namespace UsersTasksAPI.Models
@@ -14,6 +13,11 @@ namespace UsersTasksAPI.Models
         // set Dbset properties to define tables based on models in Database
         public DbSet<User> Users {get; set;}
         public DbSet<UserTask> Tasks {get; set;}
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder){
+            
+            modelBuilder.Entity<UserTask>().HasKey(t => t.TaskId); // explicit primary key
+        }
 
     }
     

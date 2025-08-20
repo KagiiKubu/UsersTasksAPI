@@ -14,7 +14,7 @@ namespace UsersTasksAPI.Repositories
 
         Task<UserTask> GetTaskByTitle(string title);
         Task<bool> AddNewTask(UserTask newTask);
-        Task<bool> UpdateTask(UserTask task);
+        Task<bool> UpdateTask(int id, UserTask task);
         Task<bool> DeleteTaskByTitle(string title);
 
         Task<IEnumerable<UserTask>> GetExpiredTasks();

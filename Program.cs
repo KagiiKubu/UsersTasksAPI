@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using UsersTasksAPI.Models;
+using UsersTasksAPI.Repositories;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +9,10 @@ var builder = WebApplication.CreateBuilder(args);
 // EF Core will use SQLite and connection string from appsettings.json
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Register repositories for dependency injection
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 // Add controllers
 builder.Services.AddControllers();

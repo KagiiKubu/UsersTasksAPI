@@ -1,4 +1,10 @@
 
+using Microsoft.EntityFrameworkCore;
+using UsersTasksAPI.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Linq;
+
 
 namespace UsersTasksAPI.Repositories{
 
@@ -48,7 +54,7 @@ namespace UsersTasksAPI.Repositories{
         }
 
         // remove existing user by Id
-        public async Task<bool> RemoveUserById(int id){
+        public async Task<bool> DeleteUserById(int id){
             
             //look for user in the DB using ID
             var user = await _context.Users.FindAsync(id);

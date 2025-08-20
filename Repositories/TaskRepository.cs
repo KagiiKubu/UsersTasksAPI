@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 using UsersTasksAPI.Models;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Linq;
 
 
@@ -37,9 +37,9 @@ namespace UsersTasksAPI.Repositories{
         }
 
         // update existing Task
-        public async Task<bool> UpdateTask(string title, UserTask updatedTask){
+        public async Task<bool> UpdateTask(int id, UserTask updatedTask){
             
-            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Title == title);
+            var task = await _context.Tasks.FindAsync(id);
 
             if (task == null)
                 return false;
@@ -67,69 +67,44 @@ namespace UsersTasksAPI.Repositories{
         // returns all expired tasks
         public async Task<IEnumerable<UserTask>> GetExpiredTasks(){
 
-            var expiredTasksList = new List<UserTask>();
+            // Get current date
+            var today = DateOnly.FromDateTime(DateTime.Now);
 
-            var allTasks = await _context.Tasks.ToListAsync();
-
-            foreach (var task in allTasks){
-
-                if (task.DueDate < DateOnly.FromDateTime(DateTime.Now))
-                    expiredTasksList.Add(task);
-
-            }
-
-            return expiredTasksList;
+            // only get tasks with duedate < today
+            return await _context.Tasks
+                                .Where(t => t.DueDate < today)
+                                .ToListAsync();
         }
 
         // returns all active tasks
         public async Task<IEnumerable<UserTask>> GetActiveTasks(){
 
-            var activeTasksList = new List<UserTask>();
+            // Get current date
+            var today = DateOnly.FromDateTime(DateTime.Now);
 
-            var allTasks = await _context.Tasks.ToListAsync();
-
-            foreach (var task in allTasks){
-
-                if (task.DueDate >= DateOnly.FromDateTime(DateTime.Now))
-                    activeTasksList.Add(task);
-
-            }
-
-            return activeTasksList;
+            // only get tasks with duedate >= today
+            return await _context.Tasks
+                                .Where(t => t.DueDate >= today)
+                                .ToListAsync();
         }
 
         // returns all tasks by given date
         public async Task<IEnumerable<UserTask>> GetTasksByDate(DateOnly givenDate){
 
-            var tasksByDateList = new List<UserTask>();
 
-            var allTasks = await _context.Tasks.ToListAsync();
-
-            foreach (var task in allTasks){
-
-                if (task.DueDate == givenDate)
-                    tasksByDateList.Add(task);
-
-            }
-
-            return tasksByDateList;
+            // only get tasks with duedate = givenDate
+            return await _context.Tasks
+                                .Where(t => t.DueDate == givenDate)
+                                .ToListAsync();
         }
 
         // returns all tasks by assignee
         public async Task<IEnumerable<UserTask>> GetTasksByAssignee(int assigneeId){
 
-            var tasksByAssignee = new List<UserTask>();
-
-            var allTasks = await _context.Tasks.ToListAsync();
-
-            foreach (var task in allTasks){
-
-                if (task.Assignee == assigneeId)
-                    tasksByAssignee.Add(task);
-
-            }
-
-            return tasksByAssignee;
+            // only get tasks with specified assignee
+            return await _context.Tasks
+                                .Where(t => t.Assignee == assigneeId)
+                                .ToListAsync();
         }
 
     }
